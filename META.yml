@@ -1,0 +1,19 @@
+--- #YAML:1.0
+name:                Git-PurePerl
+version:             0.32
+abstract:            A Pure Perl interface to Git repositories
+license:             perl
+author:              
+    - Leon Brocard <acme@astray.com>
+generated_by:        ExtUtils::MakeMaker version 6.44
+distribution_type:   module
+requires:     
+    Archive::Extract:              0
+    Compress::Raw::Zlib:           0
+    Compress::Zlib:                0
+    Moose:                         0
+    MooseX::StrictConstructor:     0
+    MooseX::Types::Path::Class:    0
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3
