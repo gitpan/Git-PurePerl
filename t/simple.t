@@ -1,7 +1,7 @@
 #!perl
 use strict;
 use warnings;
-use Test::More tests => 153;
+use Test::More tests => 156;
 use Git::PurePerl;
 
 foreach my $directory qw(test-project test-project-packs test-project-packs2)
@@ -67,11 +67,11 @@ hello world, again
 '
     );
 
-   $commit = $git->get_object( $commit->parent );
+    $commit = $git->get_object( $commit->parent );
     is( $commit->kind, 'commit' );
     is( $commit->size, 213 );
     like( $commit->sha1, qr/^[a-z0-9]{40}$/ );
-    is( $commit->tree, '92b8b694ffb1675e5975148e1121810081dbdffe' );
+    is( $commit->tree,   '92b8b694ffb1675e5975148e1121810081dbdffe' );
     is( $commit->parent, undef );
     like( $commit->author,
         qr/^Your Name Comes Here <you\@yourdomain.example.com>/ );
@@ -96,5 +96,5 @@ hello world, again
 '
     );
 
-  
+    is( $git->all_sha1s->all, 9 );
 }
