@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Git-PurePerl
-version:             0.35
+version:             0.36
 abstract:            A Pure Perl interface to Git repositories
 license:             perl
 author:              

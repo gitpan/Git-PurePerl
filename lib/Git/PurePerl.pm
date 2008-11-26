@@ -10,10 +10,11 @@ use Git::PurePerl::DirectoryEntry;
 use Git::PurePerl::Object;
 use Git::PurePerl::Object::Blob;
 use Git::PurePerl::Object::Commit;
+use Git::PurePerl::Object::Tag;
 use Git::PurePerl::Object::Tree;
 use Git::PurePerl::Pack;
 use Path::Class;
-our $VERSION = '0.35';
+our $VERSION = '0.36';
 
 has 'directory' =>
     ( is => 'ro', isa => 'Path::Class::Dir', required => 1, coerce => 1 );
@@ -27,6 +28,10 @@ has 'packs' => (
 
 sub BUILD {
     my $self = shift;
+    my $git_dir = dir( $self->directory, '.git' );
+    unless ( -d $git_dir ) {
+        confess $self->directory . ' does not contain a .git directory';
+    }
     my $pack_dir = dir( $self->directory, '.git', 'objects', 'pack' );
     my @packs;
     foreach my $filename ( $pack_dir->children ) {
@@ -111,8 +116,15 @@ sub create_object {
             size    => $size,
             content => $content,
         );
+    } elsif ( $kind eq 'tag' ) {
+        return Git::PurePerl::Object::Tag->new(
+            sha1    => $sha1,
+            kind    => $kind,
+            size    => $size,
+            content => $content,
+        );
     } else {
-        confess "unknown kind $kind";
+        confess "unknown kind $kind: $content";
     }
 }
 
