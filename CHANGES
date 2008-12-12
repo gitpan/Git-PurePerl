@@ -1,5 +1,14 @@
 Revision history for Perl module Git::PurePerl:
 
+0.37 Fri Dec 12 16:18:02 GMT 2008
+     - add minimal docs (thanks to tokuhirom)
+     - speed everything up by making the classes immutable
+     - lazily build packs
+     - simplify the code by splitting pack index reading into
+       Git::PurePerl::PackIndex::Version1 and 
+       Git::PurePerl::PackIndex::Version2
+     - minor tidying of code
+
 0.36 Wed Nov 26 21:49:33 GMT 2008
      - add a class to represent tags
      - complain if the directory does not have a .git directory

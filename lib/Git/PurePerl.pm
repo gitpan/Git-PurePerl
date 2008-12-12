@@ -13,8 +13,11 @@ use Git::PurePerl::Object::Commit;
 use Git::PurePerl::Object::Tag;
 use Git::PurePerl::Object::Tree;
 use Git::PurePerl::Pack;
+use Git::PurePerl::PackIndex;
+use Git::PurePerl::PackIndex::Version1;
+use Git::PurePerl::PackIndex::Version2;
 use Path::Class;
-our $VERSION = '0.36';
+our $VERSION = '0.37';
 
 has 'directory' =>
     ( is => 'ro', isa => 'Path::Class::Dir', required => 1, coerce => 1 );
@@ -24,7 +27,10 @@ has 'packs' => (
     isa        => 'ArrayRef[Git::PurePerl::Pack]',
     required   => 0,
     auto_deref => 1,
+    lazy_build => 1,
 );
+
+__PACKAGE__->meta->make_immutable;
 
 sub BUILD {
     my $self = shift;
@@ -32,13 +38,17 @@ sub BUILD {
     unless ( -d $git_dir ) {
         confess $self->directory . ' does not contain a .git directory';
     }
+}
+
+sub _build_packs {
+    my $self = shift;
     my $pack_dir = dir( $self->directory, '.git', 'objects', 'pack' );
     my @packs;
     foreach my $filename ( $pack_dir->children ) {
         next unless $filename =~ /\.pack$/;
         push @packs, Git::PurePerl::Pack->new( filename => $filename );
     }
-    $self->packs( \@packs );
+    return \@packs;
 }
 
 sub master {
@@ -132,11 +142,12 @@ sub all_sha1s {
     my $self = shift;
     my $dir = dir( $self->directory, '.git', 'objects' );
 
+    my @streams;
+
     my $files = Data::Stream::Bulk::Path::Class->new(
         dir        => $dir,
         only_files => 1,
     );
-    my @streams;
     push @streams, Data::Stream::Bulk::Filter->new(
         filter => sub {
             [   map { m{([a-z0-9]{2})/([a-z0-9]{38})}; $1 . $2 }
@@ -164,11 +175,36 @@ Git::PurePerl - A Pure Perl interface to Git repositories
 
 =head1 SYNOPSIS
 
+    my $git = Git::PurePerl->new(
+        directory => '/path/to/git/'
+    );
+    $git->master->committer;
+    $git->master->comment;
+    $git->get_object($git->master->tree);
+
 =head1 DESCRIPTION
 
 This module is a Pure Perl interface to Git repositories.
 
 It was mostly based on Grit L<http://grit.rubyforge.org/>.
+
+=head1 METHODS
+
+=over 4
+
+=item master
+
+=item get_object
+
+=item get_object_packed
+
+=item get_object_loose
+
+=item create_object
+
+=item all_sha1s
+
+=back
 
 =head1 AUTHOR
 
