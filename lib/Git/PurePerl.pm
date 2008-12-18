@@ -7,6 +7,7 @@ use Data::Stream::Bulk;
 use Data::Stream::Bulk::Array;
 use Data::Stream::Bulk::Path::Class;
 use Git::PurePerl::DirectoryEntry;
+use Git::PurePerl::Loose;
 use Git::PurePerl::Object;
 use Git::PurePerl::Object::Blob;
 use Git::PurePerl::Object::Commit;
@@ -17,10 +18,17 @@ use Git::PurePerl::PackIndex;
 use Git::PurePerl::PackIndex::Version1;
 use Git::PurePerl::PackIndex::Version2;
 use Path::Class;
-our $VERSION = '0.37';
+our $VERSION = '0.38';
 
 has 'directory' =>
     ( is => 'ro', isa => 'Path::Class::Dir', required => 1, coerce => 1 );
+
+has 'loose' => (
+    is         => 'rw',
+    isa        => 'Git::PurePerl::Loose',
+    required   => 0,
+    lazy_build => 1,
+);
 
 has 'packs' => (
     is         => 'rw',
@@ -34,10 +42,20 @@ __PACKAGE__->meta->make_immutable;
 
 sub BUILD {
     my $self = shift;
+
+    unless ( -d $self->directory ) {
+        confess $self->directory . ' is not a directory';
+    }
     my $git_dir = dir( $self->directory, '.git' );
     unless ( -d $git_dir ) {
         confess $self->directory . ' does not contain a .git directory';
     }
+}
+
+sub _build_loose {
+    my $self = shift;
+    my $loose_dir = dir( $self->directory, '.git', 'objects' );
+    return Git::PurePerl::Loose->new( directory => $loose_dir );
 }
 
 sub _build_packs {
@@ -90,17 +108,10 @@ sub get_object_packed {
 sub get_object_loose {
     my ( $self, $sha1 ) = @_;
 
-    my $filename = file(
-        $self->directory, '.git', 'objects',
-        substr( $sha1, 0, 2 ),
-        substr( $sha1, 2 )
-    );
-
-    my $compressed = $filename->slurp;
-    my $data       = uncompress($compressed);
-    my ( $kind, $size, $content ) = $data =~ /^(\w+) (\d+)\0(.+)$/s;
-
-    return $self->create_object( $sha1, $kind, $size, $content );
+    my ( $kind, $size, $content ) = $self->loose->get_object($sha1);
+    if ( $kind && $size && $content ) {
+        return $self->create_object( $sha1, $kind, $size, $content );
+    }
 }
 
 sub create_object {
@@ -143,26 +154,69 @@ sub all_sha1s {
     my $dir = dir( $self->directory, '.git', 'objects' );
 
     my @streams;
-
-    my $files = Data::Stream::Bulk::Path::Class->new(
-        dir        => $dir,
-        only_files => 1,
-    );
-    push @streams, Data::Stream::Bulk::Filter->new(
-        filter => sub {
-            [   map { m{([a-z0-9]{2})/([a-z0-9]{38})}; $1 . $2 }
-                    grep {m{/[a-z0-9]{2}/}} @$_
-            ];
-        },
-        stream => $files,
-    );
+    push @streams, $self->loose->all_sha1s;
 
     foreach my $pack ( $self->packs ) {
-        push @streams,
-            Data::Stream::Bulk::Array->new( array => [ $pack->all_sha1s ], );
+        push @streams, $pack->all_sha1s;
     }
 
     return Data::Stream::Bulk::Cat->new( streams => \@streams, );
+}
+
+sub init {
+    my ( $class, %arguments ) = @_;
+    my $directory = $arguments{directory} || confess "No directory passed";
+    my $git_dir = dir( $directory, '.git' );
+
+    dir($directory)->mkpath;
+    dir($git_dir)->mkpath;
+    dir( $git_dir, 'refs',    'tags' )->mkpath;
+    dir( $git_dir, 'objects', 'info' )->mkpath;
+    dir( $git_dir, 'objects', 'pack' )->mkpath;
+    dir( $git_dir, 'branches' )->mkpath;
+    dir( $git_dir, 'hooks' )->mkpath;
+
+    $class->_add_file(
+        file( $git_dir, 'config' ),
+        "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\tlogallrefupdates = true\n"
+    );
+    $class->_add_file( file( $git_dir, 'description' ),
+        "Unnamed repository; edit this file to name it for gitweb.\n" );
+    $class->_add_file(
+        file( $git_dir, 'hooks', 'applypatch-msg' ),
+        "# add shell script and make executable to enable\n"
+    );
+    $class->_add_file( file( $git_dir, 'hooks', 'post-commit' ),
+        "# add shell script and make executable to enable\n" );
+    $class->_add_file(
+        file( $git_dir, 'hooks', 'post-receive' ),
+        "# add shell script and make executable to enable\n"
+    );
+    $class->_add_file( file( $git_dir, 'hooks', 'post-update' ),
+        "# add shell script and make executable to enable\n" );
+    $class->_add_file(
+        file( $git_dir, 'hooks', 'pre-applypatch' ),
+        "# add shell script and make executable to enable\n"
+    );
+    $class->_add_file( file( $git_dir, 'hooks', 'pre-commit' ),
+        "# add shell script and make executable to enable\n" );
+    $class->_add_file( file( $git_dir, 'hooks', 'pre-rebase' ),
+        "# add shell script and make executable to enable\n" );
+    $class->_add_file( file( $git_dir, 'hooks', 'update' ),
+        "# add shell script and make executable to enable\n" );
+
+    dir( $git_dir, 'info' )->mkpath;
+    $class->_add_file( file( $git_dir, 'info', 'exclude' ),
+        "# *.[oa]\n# *~\n" );
+
+    return $class->new(%arguments);
+}
+
+sub _add_file {
+    my ( $class, $filename, $contents ) = @_;
+    my $fh = $filename->openw || confess "Error opening to $filename: $!";
+    $fh->print($contents) || confess "Error writing to $filename: $!";
+    $fh->close || confess "Error closing $filename: $!";
 }
 
 1;
