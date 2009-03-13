@@ -32,7 +32,7 @@ use Git::PurePerl::Protocol;
 use IO::Digest;
 use IO::Socket::INET;
 use Path::Class;
-our $VERSION = '0.39';
+our $VERSION = '0.40';
 
 has 'directory' =>
     ( is => 'ro', isa => 'Path::Class::Dir', required => 1, coerce => 1 );
@@ -50,6 +50,16 @@ has 'packs' => (
     required   => 0,
     auto_deref => 1,
     lazy_build => 1,
+);
+
+has 'description' => (
+    is      => 'rw',
+    isa     => 'Str',
+    lazy    => 1,
+    default => sub {
+        my $self = shift;
+        file( $self->directory, '.git', 'description' )->slurp( chomp => 1 );
+    }
 );
 
 __PACKAGE__->meta->make_immutable;
