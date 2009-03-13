@@ -4,6 +4,8 @@ use MooseX::StrictConstructor;
 use Moose::Util::TypeConstraints;
 extends 'Git::PurePerl::Object';
 
+has 'kind' =>
+    ( is => 'ro', isa => 'ObjectKind', required => 1, default => 'tree' );
 has 'directory_entries' => (
     is         => 'rw',
     isa        => 'ArrayRef[Git::PurePerl::DirectoryEntry]',
@@ -16,7 +18,7 @@ __PACKAGE__->meta->make_immutable;
 sub BUILD {
     my $self    = shift;
     my $content = $self->content;
-
+    return unless $content;
     my @directory_entries;
     while ($content) {
         my $space_index = index( $content, ' ' );
@@ -32,6 +34,7 @@ sub BUILD {
             mode     => $mode,
             filename => $filename,
             sha1     => $sha1,
+            git      => $self->git,
             );
     }
     $self->directory_entries( \@directory_entries );

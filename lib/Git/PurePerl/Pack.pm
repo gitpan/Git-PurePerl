@@ -7,8 +7,6 @@ use IO::File;
 
 has 'filename' =>
     ( is => 'ro', isa => 'Path::Class::File', required => 1, coerce => 1 );
-has 'index' =>
-    ( is => 'rw', isa => 'Git::PurePerl::PackIndex', required => 0 );
 has 'fh' => ( is => 'rw', isa => 'IO::File', required => 0 );
 
 __PACKAGE__->meta->make_immutable;
@@ -27,37 +25,8 @@ my $SHA1Size = 20;
 
 sub BUILD {
     my $self = shift;
-
-    my $filename = $self->filename;
-    my $fh = IO::File->new($filename) || confess($!);
+    my $fh = IO::File->new( $self->filename ) || confess($!);
     $self->fh($fh);
-
-    my $index_filename = $filename;
-    $index_filename =~ s/\.pack/.idx/;
-
-    my $index_fh = IO::File->new($index_filename) || confess($!);
-    $index_fh->read( my $signature, 4 );
-    $index_fh->read( my $version,   4 );
-    $version = unpack( 'N', $version );
-    $index_fh->close;
-
-    if ( $signature eq "\377tOc" ) {
-        if ( $version == 2 ) {
-            $self->index(
-                Git::PurePerl::PackIndex::Version2->new(
-                    filename => $index_filename
-                )
-            );
-        } else {
-            confess("Unknown version");
-        }
-    } else {
-        $self->index(
-            Git::PurePerl::PackIndex::Version1->new(
-                filename => $index_filename
-            )
-        );
-    }
 }
 
 sub all_sha1s {
@@ -66,23 +35,18 @@ sub all_sha1s {
         array => [ $self->index->all_sha1s ] );
 }
 
-sub get_object {
-    my ( $self, $want_sha1 ) = @_;
-    my $offset = $self->index->get_object_offset($want_sha1);
-    return $self->unpack_object($offset);
-}
-
 sub unpack_object {
     my ( $self, $offset ) = @_;
     my $obj_offset = $offset;
     my $fh         = $self->fh;
 
-    $fh->seek( $offset, 0 ) || die $!;
-    $fh->read( my $c, 1 ) || die $!;
+    $fh->seek( $offset, 0 ) || die "Error seeking in pack: $!";
+    $fh->read( my $c, 1 ) || die "Error reading from pack: $!";
     $c = unpack( 'C', $c ) || die $!;
 
-    my $size = ( $c & 0xf );
-    my $type = ( $c >> 4 ) & 7;
+    my $size        = ( $c & 0xf );
+    my $type_number = ( $c >> 4 ) & 7;
+    my $type = $TYPES[$type_number] || confess "invalid type $type_number";
 
     my $shift = 4;
     $offset++;
@@ -94,8 +58,6 @@ sub unpack_object {
         $shift  += 7;
         $offset += 1;
     }
-
-    $type = $TYPES[$type];
 
     if ( $type eq 'ofs_delta' || $type eq 'ref_delta' ) {
         ( $type, $size, my $content )
@@ -130,6 +92,8 @@ sub read_compressed {
         my $status = $deflate->inflate( $block, $out );
     }
     confess "$out is not $size" unless length($out) == $size;
+
+    $fh->seek( $offset + $deflate->total_in, 0 ) || die $!;
     return $out;
 }
 
@@ -172,6 +136,7 @@ sub unpack_deltified {
 
 sub patch_delta {
     my ( $self, $base, $delta ) = @_;
+
     my ( $src_size, $pos ) = $self->patch_delta_header_size( $delta, 0 );
     if ( $src_size != length($base) ) {
         confess "invalid delta data";
@@ -239,4 +204,7 @@ sub patch_delta_header_size {
     }
     return ( $size, $pos );
 }
+
+
+
 1;

@@ -1,5 +1,21 @@
 Revision history for Perl module Git::PurePerl:
 
+0.39 Fri Mar 13 10:14:57 GMT 2009
+     - add a method to generate the sha1 of an object
+     - add a raw method to objects
+     - add new set of classes to add objects
+     - add class to talk the git protocol
+     - add a method to checkout the head
+     - add a method to return the references
+     - add a method to return the commit for a reference
+     - fix bug where it would not find an object if there was a
+       mixture of packs and loose objects
+     - fix bug to do with empty files
+     - split methods into those that returns sha1s and those that
+       return objects
+     - add class to index packs
+     - make it work under Win32 (thanks to fayland)
+
 0.38 Thu Dec 18 10:26:49 GMT 2008
      - add init() method to create a new repository
      - create Git::PurePerl::Loose to handle loose objects
