@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Git-PurePerl
-version:             0.40
+version:             0.41
 abstract:            A Pure Perl interface to Git repositories
 license:             perl
 author:              
@@ -12,6 +12,7 @@ requires:
     Compress::Raw::Zlib:           0
     Compress::Zlib:                0
     Data::Stream::Bulk:            0
+    DateTime:                      0
     Digest::SHA1:                  0
     File::Find::Rule:              0
     IO::Digest:                    0
