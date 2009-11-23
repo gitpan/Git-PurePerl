@@ -34,7 +34,7 @@ use Git::PurePerl::Protocol;
 use IO::Digest;
 use IO::Socket::INET;
 use Path::Class;
-our $VERSION = '0.41';
+our $VERSION = '0.42_01';
 
 has 'directory' => (
     is       => 'ro',
@@ -89,7 +89,7 @@ sub BUILD {
     my $self = shift;
 
     unless ( -d $self->gitdir ) {
-        confess $self->directory . ' is not a directory';
+        confess $self->gitdir . ' is not a directory';
     }
     unless ( not defined $self->directory or -d $self->directory ) {
         confess $self->directory . ' is not a directory';
@@ -121,7 +121,7 @@ sub _ref_names_recursive {
         if ( -d $file ) {
             my $reldir  = $file->relative($dir);
             my $subbase = $base . $reldir . "/";
-            _ref_names_dir( $file, $subbase, $names );
+            _ref_names_recursive( $file, $subbase, $names );
         } else {
             push @$names, $base . $file->basename;
         }
@@ -295,23 +295,26 @@ sub all_objects {
 }
 
 sub put_object {
-    my ( $self, $object ) = @_;
+    my ( $self, $object, $ref ) = @_;
     $self->loose->put_object($object);
 
     if ( $object->kind eq 'commit' ) {
-        $self->update_master( $object->sha1 );
+        $ref = 'master' unless $ref;
+        $self->update_ref( $ref, $object->sha1 );
     }
 }
 
-sub update_master {
-    my ( $self, $sha1 ) = @_;
-    my $master = file( $self->gitdir, 'refs', 'heads', 'master' );
-    $master->parent->mkpath;
-    my $master_fh = $master->openw;
-    $master_fh->print($sha1) || die "Error writing to $master";
+sub update_ref {
+    my ( $self, $refname, $sha1 ) = @_;
+    my $ref = file( $self->gitdir, 'refs', 'heads', $refname );
+    $ref->parent->mkpath;
+    my $ref_fh = $ref->openw;
+    $ref_fh->print($sha1) || die "Error writing to $ref";
+
+    # FIXME is this always what we want?
     my $head = file( $self->gitdir, 'HEAD' );
     my $head_fh = $head->openw;
-    $head_fh->print('ref: refs/heads/master')
+    $head_fh->print("ref: refs/heads/$refname")
         || die "Error writing to $head";
 }
 
@@ -417,7 +420,7 @@ sub clone {
         = Git::PurePerl::Pack::WithoutIndex->new( filename => $filename );
     $pack->create_index();
 
-    $self->update_master($head);
+    $self->update_ref( master => $head );
 }
 
 sub _add_file {
@@ -468,15 +471,31 @@ It was mostly based on Grit L<http://grit.rubyforge.org/>.
 
 =back
 
+=head1 MAINTAINANCE
+
+This module is maintained in git at L<http://github.com/bobtfish/git-pureperl/>.
+
+Patches are welcome, please come speak to one of the L<Gitalist> team
+on C<< #gitalist >>.
+
 =head1 AUTHOR
 
 Leon Brocard <acme@astray.com>
 
+=head1 CONTRIBUTORS
+
+    Chris Reinhardt
+    Tomas (t0m) Doran
+    Dan (broquaint) Brook
+
 =head1 COPYRIGHT
 
-Copyright (C) 2008, Leon Brocard.
+Copyright (C) 2008, Leon Brocard and the above mentioned contributors.
 
 =head1 LICENSE
 
-This module is free software; you can redistribute it or 
+This module is free software; you can redistribute it or
 modify it under the same terms as Perl itself.
+
+=cut
+
