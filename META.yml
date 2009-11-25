@@ -1,32 +1,35 @@
---- #YAML:1.0
-name:               Git-PurePerl
-version:            0.42_01
-abstract:           A Pure Perl interface to Git repositories
+---
+abstract: 'A Pure Perl interface to Git repositories'
 author:
-    - Leon Brocard <acme@astray.com>
-license:            perl
-distribution_type:  module
-configure_requires:
-    ExtUtils::MakeMaker:  0
+  - 'Leon Brocard <acme@astray.com>'
 build_requires:
-    ExtUtils::MakeMaker:  0
-requires:
-    Archive::Extract:     0
-    Compress::Raw::Zlib:  0
-    Compress::Zlib:       0
-    Data::Stream::Bulk:   0
-    DateTime:             0
-    Digest::SHA1:         0
-    File::Find::Rule:     0
-    IO::Digest:           0
-    Moose:                0
-    MooseX::StrictConstructor:  0
-    MooseX::Types::Path::Class:  0
-no_index:
-    directory:
-        - t
-        - inc
-generated_by:       ExtUtils::MakeMaker version 6.50
+  ExtUtils::MakeMaker: 6.42
+configure_requires:
+  ExtUtils::MakeMaker: 6.42
+distribution_type: module
+generated_by: 'Module::Install version 0.910'
+license: perl
 meta-spec:
-    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
-    version:  1.4
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Git-PurePerl
+no_index:
+  directory:
+    - inc
+    - t
+requires:
+  Archive::Extract: 0
+  Compress::Raw::Zlib: 0
+  Compress::Zlib: 0
+  Data::Stream::Bulk: 0
+  DateTime: 0
+  Digest::SHA1: 0
+  File::Find::Rule: 0
+  IO::Digest: 0
+  Moose: 0
+  MooseX::StrictConstructor: 0
+  MooseX::Types::Path::Class: 0
+resources:
+  license: http://dev.perl.org/licenses/
+  repository: git://github.com/bobtfish/git-pureperl.git
+version: 0.43
