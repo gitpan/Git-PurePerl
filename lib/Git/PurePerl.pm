@@ -34,7 +34,7 @@ use Git::PurePerl::Protocol;
 use IO::Digest;
 use IO::Socket::INET;
 use Path::Class;
-our $VERSION = '0.43';
+our $VERSION = '0.44';
 $VERSION = eval $VERSION;
 
 has 'directory' => (
@@ -163,13 +163,24 @@ sub ref_sha1 {
     my ( $self, $wantref ) = @_;
     my @refs;
     my $dir = dir( $self->gitdir, 'refs' );
-    next unless -d $dir;
+    return unless -d $dir;
+
+    if ($wantref eq "HEAD") {
+        my $file = file($self->gitdir, 'HEAD');
+        my $sha1 = file($file)->slurp
+            || confess("Error reading $file: $!");
+        chomp $sha1;
+        return $self->ref_sha1($1) if $sha1 =~ /^ref: (.*)/;
+        return $sha1;
+    }
+
     foreach my $file ( File::Find::Rule->new->file->in($dir) ) {
         my $ref = 'refs/' . file($file)->relative($dir)->as_foreign('Unix');
         if ( $ref eq $wantref ) {
             my $sha1 = file($file)->slurp
                 || confess("Error reading $file: $!");
             chomp $sha1;
+            return $self->ref_sha1($1) if $sha1 =~ /^ref: (.*)/;
             return $sha1;
         }
     }
@@ -180,6 +191,7 @@ sub ref_sha1 {
             next if $line =~ /^#/;
             my ( $sha1, my $name ) = split ' ', $line;
             if ( $name eq $wantref ) {
+                return $self->ref_sha1($1) if $sha1 =~ /^ref: (.*)/;
                 return $sha1;
             }
         }
@@ -200,6 +212,16 @@ sub master_sha1 {
 sub master {
     my $self = shift;
     return $self->ref('refs/heads/master');
+}
+
+sub head_sha1 {
+    my $self = shift;
+    return $self->ref_sha1('HEAD');
+}
+
+sub head {
+    my $self = shift;
+    return $self->ref('HEAD');
 }
 
 sub get_object {
@@ -382,6 +404,7 @@ sub init {
 
 sub checkout {
     my ( $self, $directory, $tree ) = @_;
+    $directory ||= $self->directory;
     $tree ||= $self->master->tree;
     confess("Missing tree") unless $tree;
     foreach my $directory_entry ( $tree->directory_entries ) {
@@ -488,6 +511,7 @@ Leon Brocard <acme@astray.com>
     Chris Reinhardt
     Tomas (t0m) Doran
     Dan (broquaint) Brook
+    Alex Vandiver
 
 =head1 COPYRIGHT
 
