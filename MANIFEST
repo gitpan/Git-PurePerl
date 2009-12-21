@@ -34,7 +34,6 @@ MANIFEST			This list of files
 META.yml
 README
 t/00_setup.t
-t/checkout/file.txt
 t/init.t
 t/protocol.t
 t/protocol_gpp.t
