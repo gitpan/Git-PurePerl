@@ -1,7 +1,7 @@
 #!perl
 use strict;
 use warnings;
-use Test::More tests => 198;
+use Test::More;
 use Git::PurePerl;
 use Path::Class;
 
@@ -102,6 +102,8 @@ hello world, again
     is( $git->all_sha1s->all,   9 );
     is( $git->all_objects->all, 9 );
 
+    is( $git->config->get(key => 'user.name'), 'Your Name Comes Here' );
+
     $checkout_directory->rmtree;
     $checkout_directory->mkpath;
     $git->checkout($checkout_directory);
@@ -122,3 +124,5 @@ hello world, again
         'have ref master'
     );
 }
+
+done_testing;

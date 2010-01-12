@@ -10,6 +10,7 @@ use DateTime;
 use Digest::SHA1;
 use File::Find::Rule;
 use Git::PurePerl::Actor;
+use Git::PurePerl::Config;
 use Git::PurePerl::DirectoryEntry;
 use Git::PurePerl::Loose;
 use Git::PurePerl::Object;
@@ -34,7 +35,9 @@ use Git::PurePerl::Protocol;
 use IO::Digest;
 use IO::Socket::INET;
 use Path::Class;
-our $VERSION = '0.45';
+use namespace::autoclean;
+
+our $VERSION = '0.46';
 $VERSION = eval $VERSION;
 
 has 'directory' => (
@@ -73,6 +76,16 @@ has 'description' => (
     default => sub {
         my $self = shift;
         file( $self->gitdir, 'description' )->slurp( chomp => 1 );
+    }
+);
+
+has 'config' => (
+    is      => 'ro',
+    isa     => 'Git::PurePerl::Config',
+    lazy    => 1,
+    default => sub {
+        my $self = shift;
+        Git::PurePerl::Config->new(git => $self);
     }
 );
 
@@ -509,10 +522,19 @@ Leon Brocard <acme@astray.com>
 
 =head1 CONTRIBUTORS
 
-    Chris Reinhardt
-    Tomas (t0m) Doran
-    Dan (broquaint) Brook
-    Alex Vandiver
+=over 4
+
+=item Chris Reinhardt
+
+=item Tomas (t0m) Doran
+
+=item Dan (broquaint) Brook
+
+=item Alex Vandiver
+
+=item Dagfinn Ilmari MannsE<aring>ker
+
+=back
 
 =head1 COPYRIGHT
 

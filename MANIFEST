@@ -9,6 +9,7 @@ inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/Git/PurePerl.pm
 lib/Git/PurePerl/Actor.pm
+lib/Git/PurePerl/Config.pm
 lib/Git/PurePerl/DirectoryEntry.pm
 lib/Git/PurePerl/Loose.pm
 lib/Git/PurePerl/NewDirectoryEntry.pm
@@ -34,10 +35,13 @@ MANIFEST			This list of files
 META.yml
 README
 t/00_setup.t
+t/checkout/file.txt
+t/encoding.t
 t/init.t
 t/protocol.t
 t/protocol_gpp.t
 t/simple.t
+test-encoding.tgz
 test-project-packs.tgz
 test-project-packs2.tgz
 test-project.tgz
