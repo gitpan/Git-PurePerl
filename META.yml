@@ -36,4 +36,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/bobtfish/git-pureperl.git
-version: 0.46
+version: 0.46_01

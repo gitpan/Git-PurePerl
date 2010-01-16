@@ -30,6 +30,9 @@ lib/Git/PurePerl/PackIndex.pm
 lib/Git/PurePerl/PackIndex/Version1.pm
 lib/Git/PurePerl/PackIndex/Version2.pm
 lib/Git/PurePerl/Protocol.pm
+lib/Git/PurePerl/Protocol/File.pm
+lib/Git/PurePerl/Protocol/Git.pm
+lib/Git/PurePerl/Protocol/SSH.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml

@@ -37,7 +37,7 @@ use IO::Socket::INET;
 use Path::Class;
 use namespace::autoclean;
 
-our $VERSION = '0.46';
+our $VERSION = '0.46_01';
 $VERSION = eval $VERSION;
 
 has 'directory' => (
@@ -439,10 +439,20 @@ sub checkout {
 }
 
 sub clone {
-    my ( $self, $hostname, $project ) = @_;
+    my $self = shift;
+
+    my $remote;
+    if (@_  == 2) {
+        # For backwards compatibility
+        $remote = "git://$_[0]";
+        $remote .= "/" unless $_[1] =~ m{^/};
+        $remote .= $_[1];
+    } else {
+        $remote = shift;
+    }
+
     my $protocol = Git::PurePerl::Protocol->new(
-        hostname => $hostname,
-        project  => $project,
+        remote => $remote,
     );
 
     my $sha1s = $protocol->connect;
