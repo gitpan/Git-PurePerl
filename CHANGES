@@ -1,5 +1,8 @@
 Revision history for Perl module Git::PurePerl:
 
+0.47 Wed Aug 11 13:29:06 BST 2010
+     - Lazily build the fh attribute of Git::PurePerl::Pack objects.
+
 0.46_01 Sat 16 Jan 13:42:00 GMT 2010
      - Add support for ssh:// and file:// protocols (Alex Vandiver)
 
