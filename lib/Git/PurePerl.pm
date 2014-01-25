@@ -37,7 +37,7 @@ use IO::Socket::INET;
 use Path::Class;
 use namespace::autoclean;
 
-our $VERSION = '0.48';
+our $VERSION = '0.49';
 $VERSION = eval $VERSION;
 
 has 'directory' => (

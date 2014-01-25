@@ -4,7 +4,7 @@ use MooseX::StrictConstructor;
 use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 
-enum 'ObjectKind' => qw(commit tree blob tag);
+enum 'ObjectKind' => [qw(commit tree blob tag)];
 
 has 'kind'    => ( is => 'ro', isa => 'ObjectKind',    required => 1 );
 has 'size'    => ( is => 'ro', isa => 'Int',           required => 1 );
